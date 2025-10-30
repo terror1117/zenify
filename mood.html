@@ -1,51 +1,444 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoodMate • Vibe</title>
+  <meta name="description" content="MoodMate - a simple, positive, single-page Vibe app for mental wellness." />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111826;
+      --panel-2: #0e1522;
+      --text: #e6eefc;
+      --muted: #96a3bb;
+      --primary: #6aa5ff;
+      --primary-600: #5b90e0;
+      --accent: #64d2b6;
+      --card: #101722;
+      --border: #1b2a40;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 14px;
+    }
 
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #1a2536, #0b0f14 60%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px 20px 72px;
+    }
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    /* Vibe primitives */
+    v-heading { display: block; font-weight: 700; letter-spacing: -0.02em; }
+    v-heading[size="xl"] { font-size: 44px; line-height: 1.1; }
+    v-heading[size="lg"] { font-size: 28px; line-height: 1.2; }
+    v-heading[size="md"] { font-size: 22px; line-height: 1.25; }
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+    v-text { display: block; color: var(--muted); line-height: 1.6; }
+    v-text[muted] { opacity: 0.9; }
+    v-text[strong] { color: var(--text); font-weight: 600; }
 
-jobs:
-  # Build job
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+    v-button { display: inline-block; }
+    v-button > button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #1a2334, #121a29);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .03s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      box-shadow: var(--shadow);
+    }
+    v-button[variant="primary"] > button {
+      background: linear-gradient(180deg, #6aa5ff, #4f86df);
+      border-color: rgba(255,255,255,0.12);
+      color: #071426;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+    }
+    v-button[variant="ghost"] > button {
+      background: transparent;
+      border-color: var(--border);
+    }
+    v-button > button:active { transform: translateY(1px); }
 
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    v-grid { display: grid; gap: 16px; }
+    v-grid[cols="2"] { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    v-grid[cols="3"] { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    @media (max-width: 820px) {
+      v-grid[cols="2"], v-grid[cols="3"] { grid-template-columns: 1fr; }
+    }
+
+    v-card { display: block; border: 1px solid var(--border); background: linear-gradient(180deg, var(--panel), var(--panel-2)); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .card-title { font-size: 18px; font-weight: 700; margin: 2px 0 8px; }
+    .card-sub { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+
+    v-modal { display: none; position: fixed; inset: 0; z-index: 40; align-items: center; justify-content: center; }
+    v-modal[open] { display: flex; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(3,8,15,0.72); backdrop-filter: blur(5px); }
+    .modal-panel { position: relative; background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid var(--border); border-radius: 16px; padding: 18px; width: min(560px, 92vw); box-shadow: var(--shadow); }
+
+    /* App layout */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(145deg, #6aa5ff, #64d2b6); box-shadow: 0 6px 18px rgba(100,210,182,0.25); }
+    .brand-name { font-weight: 800; letter-spacing: -0.02em; font-size: 18px; }
+
+    .tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tabs button {
+      appearance: none;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .tabs button.active { color: var(--text); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(106,165,255,0.15) inset; }
+
+    section[hidden] { display: none; }
+
+    .hero { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: linear-gradient(180deg, #0f1724, #0d1523); box-shadow: var(--shadow); }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .emoji-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 560px) { .emoji-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .emoji-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-size: 18px; border-radius: 14px; border: 1px solid var(--border); background: linear-gradient(180deg, #1a2334, #121a29); color: var(--text); cursor: pointer; box-shadow: var(--shadow); font-weight: 700; }
+    .emoji { font-size: 22px; }
+
+    .tip-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #142033; border: 1px solid var(--border); }
+    .link { color: var(--primary); text-decoration: none; }
+    .muted { color: var(--muted); }
+
+    /* Chart */
+    .chart-wrap { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: linear-gradient(180deg, #0f1828, #0c1422); box-shadow: var(--shadow); }
+    canvas { width: 100%; height: 260px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="brand-name">MoodMate</div>
+      </div>
+      <nav class="tabs" id="tabs"></nav>
+    </header>
+
+    <!-- Home -->
+    <section id="home">
+      <div class="hero">
+        <v-heading size="xl">Welcome to MoodMate</v-heading>
+        <v-text>
+          Track your feelings, find quick tips to unwind, discover helpful resources, and share positive vibes — all in one gentle place.
+        </v-text>
+        <div class="hero-actions">
+          <v-button variant="primary"><button id="startMoodCheck">Start Your Mood Check</button></v-button>
+          <v-button variant="ghost"><button data-nav="summary">View Mood Summary</button></v-button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mood Tracker -->
+    <section id="tracker" hidden>
+      <v-heading size="lg">Mood Tracker</v-heading>
+      <v-text muted>How are you feeling right now?</v-text>
+      <div style="height:10px"></div>
+      <div class="emoji-grid">
+        <button class="emoji-btn" data-mood="Happy"> <span class="emoji">😊</span> Happy</button>
+        <button class="emoji-btn" data-mood="Sad"> <span class="emoji">😔</span> Sad</button>
+        <button class="emoji-btn" data-mood="Angry"> <span class="emoji">😡</span> Angry</button>
+        <button class="emoji-btn" data-mood="Calm"> <span class="emoji">😌</span> Calm</button>
+        <button class="emoji-btn" data-mood="Confused"> <span class="emoji">😕</span> Confused</button>
+      </div>
+      <div style="height:8px"></div>
+      <v-text class="muted">Your mood is saved locally and used for the 7‑day chart.</v-text>
+    </section>
+
+    <!-- Stress Relief Tips -->
+    <section id="tips" hidden>
+      <v-heading size="lg">Stress Relief Tips</v-heading>
+      <v-text muted>Short, practical exercises you can try right now.</v-text>
+      <div style="height:12px"></div>
+      <v-grid cols="3">
+        <v-card>
+          <div class="tip-icon">🫁</div>
+          <div class="card-title">Breathing</div>
+          <div class="card-sub">Inhale 4s • Hold 4s • Exhale 6s. Repeat 5 times.</div>
+          <v-button variant="primary"><button onclick="MM.guideBreath()">Start 60s Session</button></v-button>
+        </v-card>
+        <v-card>
+          <div class="tip-icon">🤸</div>
+          <div class="card-title">Stretching</div>
+          <div class="card-sub">Neck rolls, shoulder shrugs, and gentle forward fold.</div>
+          <v-button><button onclick="MM.note('Try 3 gentle rounds focusing on breath.')">How to</button></v-button>
+        </v-card>
+        <v-card>
+          <div class="tip-icon">🎧</div>
+          <div class="card-title">Music</div>
+          <div class="card-sub">Play a calm track you love. Close eyes, breathe slowly.</div>
+          <v-button><button onclick="MM.note('Pick a 3–5 minute instrumental or ambient track.')">Suggestion</button></v-button>
+        </v-card>
+      </v-grid>
+    </section>
+
+    <!-- Resource Connector -->
+    <section id="resources" hidden>
+      <v-heading size="lg">Resource Connector</v-heading>
+      <v-text muted>Here are a few supportive places to talk and learn.</v-text>
+      <div style="height:12px"></div>
+      <v-grid cols="3">
+        <v-card>
+          <div class="card-title">Helpline</div>
+          <div class="card-sub">If you need urgent support, please call your local helpline.</div>
+          <v-button variant="primary"><button onclick="MM.open('https://www.opencounseling.com/suicide-hotlines')">Find a Helpline</button></v-button>
+        </v-card>
+        <v-card>
+          <div class="card-title">Online Therapy</div>
+          <div class="card-sub">Talk to a licensed professional from home.</div>
+          <v-button><button onclick="MM.open('https://www.psychologytoday.com/us/therapists/online-counseling')">Explore Options</button></v-button>
+        </v-card>
+        <v-card>
+          <div class="card-title">Articles</div>
+          <div class="card-sub">Evidence-based reads about mood, stress, and sleep.</div>
+          <v-button><button onclick="MM.open('https://www.nimh.nih.gov/health/topics')">Start Reading</button></v-button>
+        </v-card>
+      </v-grid>
+    </section>
+
+    <!-- Positive Vibe Feed -->
+    <section id="feed" hidden>
+      <v-heading size="lg">Positive Vibe Feed</v-heading>
+      <v-text muted>Quick boosts to brighten your day.</v-text>
+      <div style="height:12px"></div>
+      <v-grid cols="3" id="quotesGrid"></v-grid>
+      <div style="height:12px"></div>
+      <v-button variant="primary"><button id="shareVibe">Share Your Vibe</button></v-button>
+    </section>
+
+    <!-- Mood Summary -->
+    <section id="summary" hidden>
+      <v-heading size="lg">Mood Summary</v-heading>
+      <v-text muted>Last 7 days of moods you tracked.</v-text>
+      <div style="height:12px"></div>
+      <div class="chart-wrap">
+        <canvas id="moodChart" width="800" height="280" aria-label="Mood chart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <!-- Share Modal -->
+  <v-modal id="shareModal" aria-modal="true" role="dialog" aria-label="Share Your Vibe">
+    <div class="modal-backdrop" data-close="share"></div>
+    <div class="modal-panel">
+      <v-heading size="md">Share Your Vibe</v-heading>
+      <v-text muted>Write a short, uplifting note to yourself or others.</v-text>
+      <div style="height:10px"></div>
+      <textarea id="vibeText" style="width:100%; height:120px; border-radius:12px; border:1px solid var(--border); background:#0c1422; color:var(--text); padding:12px; resize:vertical;"></textarea>
+      <div style="height:12px"></div>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <v-button><button data-close="share">Cancel</button></v-button>
+        <v-button variant="primary"><button id="postVibe">Post Vibe</button></v-button>
+      </div>
+    </div>
+  </v-modal>
+
+  <script>
+    // Lightweight Vibe components via Web Components
+    customElements.define('v-heading', class extends HTMLElement { connectedCallback(){ /* semantics only */ } });
+    customElements.define('v-text', class extends HTMLElement { connectedCallback(){ /* semantics only */ } });
+    customElements.define('v-button', class extends HTMLElement { connectedCallback(){ if (!this.firstElementChild || this.firstElementChild.tagName !== 'BUTTON') { const b = document.createElement('button'); b.textContent = this.textContent.trim(); this.textContent = ''; this.appendChild(b); } } });
+    customElements.define('v-grid', class extends HTMLElement { connectedCallback(){ /* display:grid via CSS */ } });
+    customElements.define('v-card', class extends HTMLElement { connectedCallback(){ /* styled block */ } });
+    customElements.define('v-modal', class extends HTMLElement { connectedCallback(){ /* toggled with [open] */ } });
+    customElements.define('v-chart', class extends HTMLElement { connectedCallback(){ /* not used as custom tag, using canvas */ } });
+
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const TABS = [
+      { id: 'home', label: 'Home' },
+      { id: 'tracker', label: 'Mood Tracker' },
+      { id: 'tips', label: 'Stress Relief Tips' },
+      { id: 'resources', label: 'Resources' },
+      { id: 'feed', label: 'Vibe Feed' },
+      { id: 'summary', label: 'Mood Summary' },
+    ];
+
+    const MM = {
+      open(url){ window.open(url, '_blank', 'noopener'); },
+      note(msg){ alert(msg); },
+      guideBreath(){
+        let seconds = 60; const step = () => {
+          if (seconds <= 0) { alert('Breathing session complete. Notice how you feel.'); return; }
+          const phase = seconds % 14; // 4 in, 4 hold, 6 out
+          let cue = '';
+          if (phase < 4) cue = 'Inhale'; else if (phase < 8) cue = 'Hold'; else cue = 'Exhale';
+          document.title = `Breath • ${cue} • ${seconds}s`;
+          seconds -= 1; setTimeout(step, 1000);
+        }; step();
+      },
+      saveMood(mood){
+        const entry = { mood, t: Date.now() };
+        const key = 'moodmate:entries';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        list.push(entry);
+        localStorage.setItem(key, JSON.stringify(list));
+      },
+      getLast7Days(){
+        const key = 'moodmate:entries';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        const now = new Date();
+        const days = [];
+        for (let i=6; i>=0; i--) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          const dayKey = d.toISOString().slice(0,10);
+          days.push({ dayKey, label: d.toLocaleDateString(undefined, { weekday:'short' }), entries: [] });
+        }
+        for (const item of list) {
+          const dayKey = new Date(item.t).toISOString().slice(0,10);
+          const bucket = days.find(x => x.dayKey === dayKey);
+          if (bucket) bucket.entries.push(item);
+        }
+        // Map mood to numeric for simple bar height
+        const moodMap = { Happy: 5, Calm: 4, Confused: 3, Sad: 2, Angry: 1 };
+        return days.map(d => ({ label: d.label, score: Math.max(0, Math.round(d.entries.reduce((acc, e)=> acc + (moodMap[e.mood]||3), 0) / Math.max(1, d.entries.length))) }));
+      },
+    };
+    window.MM = MM;
+
+    function renderTabs(){
+      const nav = $('#tabs');
+      nav.innerHTML = '';
+      for (const t of TABS) {
+        const b = document.createElement('button');
+        b.textContent = t.label;
+        b.dataset.target = t.id;
+        b.addEventListener('click', () => goto(t.id));
+        nav.appendChild(b);
+      }
+      setActive('home');
+    }
+
+    function goto(id){
+      $$('section').forEach(s => s.hidden = s.id !== id);
+      setActive(id);
+      if (id === 'summary') drawChart();
+      if (id === 'feed') ensureQuotes();
+    }
+
+    function setActive(id){
+      $$('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.target === id));
+    }
+
+    function drawChart(){
+      const canvas = $('#moodChart');
+      const ctx = canvas.getContext('2d');
+      const data = MM.getLast7Days();
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+      // axes
+      ctx.strokeStyle = '#22344d';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, 20); ctx.lineTo(50, H-40); ctx.lineTo(W-20, H-40); ctx.stroke();
+      // labels and bars
+      const maxScore = 5;
+      const barW = Math.min(60, (W-100)/data.length - 16);
+      data.forEach((d, i) => {
+        const x = 70 + i * (barW + 16);
+        const height = ((H-80) * d.score) / maxScore;
+        const y = (H-40) - height;
+        // bar
+        const grad = ctx.createLinearGradient(0, y, 0, y+height);
+        grad.addColorStop(0, '#6aa5ff');
+        grad.addColorStop(1, '#64d2b6');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, barW, height);
+        // value
+        ctx.fillStyle = '#cfe0ff';
+        ctx.font = '12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(d.score), x + barW/2, y - 6);
+        // label
+        ctx.fillStyle = '#96a3bb';
+        ctx.fillText(d.label, x + barW/2, H-22);
+      });
+    }
+
+    const QUOTES = [
+      'One step at a time is still progress.',
+      'You are doing better than you think.',
+      'Breathe in courage, breathe out fear.'
+    ];
+
+    function ensureQuotes(){
+      const grid = $('#quotesGrid');
+      if (grid.childElementCount > 0) return;
+      QUOTES.forEach(q => {
+        const card = document.createElement('v-card');
+        const t = document.createElement('div'); t.className = 'card-title'; t.textContent = 'Motivation';
+        const s = document.createElement('div'); s.className = 'card-sub'; s.textContent = q;
+        card.appendChild(t); card.appendChild(s);
+        grid.appendChild(card);
+      });
+    }
+
+    function openModal(){ $('#shareModal').setAttribute('open', ''); $('#vibeText').focus(); }
+    function closeModal(){ $('#shareModal').removeAttribute('open'); }
+
+    function initInteractions(){
+      $('#startMoodCheck').addEventListener('click', () => goto('tracker'));
+      $$('[data-nav]').forEach(b => b.addEventListener('click', (e)=> goto(e.currentTarget.dataset.nav)));
+
+      $$('#tracker .emoji-btn').forEach(b => b.addEventListener('click', (e)=>{
+        const mood = e.currentTarget.dataset.mood;
+        MM.saveMood(mood);
+        goto('tips');
+      }));
+
+      $('#shareVibe').addEventListener('click', openModal);
+      $$('[data-close="share"]').forEach(el => el.addEventListener('click', closeModal));
+      $('#postVibe').addEventListener('click', () => {
+        const text = $('#vibeText').value.trim();
+        if (!text) { alert('Please write a short vibe to share.'); return; }
+        const card = document.createElement('v-card');
+        const t = document.createElement('div'); t.className = 'card-title'; t.textContent = 'Shared Vibe';
+        const s = document.createElement('div'); s.className = 'card-sub'; s.textContent = text;
+        card.appendChild(t); card.appendChild(s);
+        $('#quotesGrid').prepend(card);
+        $('#vibeText').value = '';
+        closeModal();
+        goto('feed');
+      });
+
+      // Close modal on Escape
+      document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
+    }
+
+    // Boot
+    renderTabs();
+    initInteractions();
+  </script>
+</body>
+</html>
